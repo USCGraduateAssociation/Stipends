@@ -1,0 +1,11 @@
+---
+title: GSA Stipend Analysis
+subtitle: Data Processing Report
+author: Alex Barth, Secretary of Data Management
+date: `r Sys.Date()`
+---
+
+
+# Auxillary Data Sources
+
+Ph.D. Stipend data from comparison universities were collected from the on-going [phdstipends project](https://www.phdstipends.com/). Data from their survey were brute-force scrapped. The code to complete this is available in `01_phdstipends-scrapper.R`. It was a little bit messy because they do not have an open API yet their tables are populated by some internal DB /JS script. Presumably, this makes it easy to repopulate data with new entries yet it makes it harder to pull their data. It seemed
