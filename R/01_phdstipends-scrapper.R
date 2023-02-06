@@ -2,6 +2,7 @@
 
 #' Scrape multiple pages
 #' 
+library(dplyr)
 
 make_tibble <- function(vect) {
   tibble(uni = vect[1],
@@ -50,4 +51,24 @@ get_phd_stipends <- function() {
   
   return(out_tibble)
 }
+
+# Pull in raw stipend data
+raw_phdstipend_data <- get_phd_stipends()
+
+# |- Filter out the bad responses -----------------------------
+
+# filter out the bad responses
+clean_stipends <- raw_phdstipend_data |> 
+  filter(uni != "" & program != "" & stipend != "")
+
+# filter out weird stipend numbers
+clean_stipends$stipend <- clean_stipends$stipend |>
+  gsub(pattern='\\$|,|-', replacement='',) |> 
+  as.numeric()
+
+# filter to a reasonalbe range of possible values
+clean_stipends <- clean_stipends |> 
+  filter(stipend > 8960 & stipend < 45000)
+
+write_tsv(clean_stipends, './data/00_phdsalaries-survey.tsv')
 
