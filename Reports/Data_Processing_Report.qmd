@@ -5,6 +5,9 @@ author: Alex Barth, Secretary of Data Management
 date: `r Sys.Date()`
 ---
 
+## Selection of Comparison Universities
+To facilitate a list of comparison universities, we looked at National Universities in large metro areas. These were selected by taking the top 400 ranked national universities (per U.S. News Rankings)
+
 
 # Auxillary Data Sources
 

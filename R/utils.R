@@ -117,3 +117,6 @@ city_to_metro <- function(city, metro_list) {
     return(NA)
   }
 }
+
+# College program data
+
