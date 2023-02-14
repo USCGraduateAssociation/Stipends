@@ -1,0 +1,257 @@
+---
+title: GSA Stipend & Cost-of-Living Analysis
+subtitle: Cost of Living and DEI Report
+author: Alex Barth, Secretary of Data Management
+date: "`r Sys.Date()`"
+format:
+  pdf
+---
+
+```{r}
+rm(list = ls())
+library(ggplot2)
+library(ggpubr)
+library(ggusc)
+library(dplyr)
+library(HDInterval)
+
+
+col_data <- read.table('../data/01_cost-of-living.tsv', sep= '\t')
+
+```
+
+
+# Cost of Living
+
+### Distribution of Common Costs
+
+Rent, Utilities, Food, Transportation, Health out-of-pocket, household goods
+
+```{r}
+
+cat_to_numeric <- function(x) {
+  
+  if(any(x == '')){
+    x[which(x=='')] <- '$0-$0'
+  }
+  
+  x <-  strsplit(x, '-') |> 
+    sapply(`[[`,1)
+  
+  #format as numeric
+  x_num <- gsub("[^[:digit:]]", "", x) |> 
+    as.numeric()
+  
+  #take those that are less than
+  x_num[grep('Less',x)] <- 0
+  
+  
+  x_num[is.na(x_num)] <- 0
+  
+  lower_bounds <- x_num |> unique() |> sort()
+  
+  mid_dist <- diff(lower_bounds)/2
+  
+  mid_values <- lower_bounds[1:length(lower_bounds)-1] + mid_dist
+  mid_values <- c(mid_values, max(mid_values)+min(mid_dist*2))
+  
+  # assign mid values to previous full values
+  
+  x_out <- sapply(x_num,
+                  function(x) mid_values[which(lower_bounds == x)])
+  
+}
+
+col_data$rent_mo_num <- cat_to_numeric(col_data$rent_mo)
+col_data$util_mo_num <- cat_to_numeric(col_data$util_mo)
+col_data$food_mo_num <- cat_to_numeric(col_data$food_mo)
+col_data$transp_mo_num <- cat_to_numeric(col_data$transp_mo)
+col_data$healthCare_mo_num <- cat_to_numeric(col_data$healthCare_mo)
+col_data$household_items_mo_num <- cat_to_numeric(col_data$household_items_mo)
+
+# calculate total annual cost of living
+col_data$housing_total_cost <- (col_data$rent_mo_num + col_data$util_mo_num) * 12
+col_data$total_col <- apply(col_data[,grep('_num', names(col_data))],1,sum) * 12
+
+```
+
+
+## What is the average monthly housing cost?
+
+The Average students spends \$`r round(mean(col_data$housing_total_cost/12),2)`/month on housing costs. However, several students report spending much more. `r round(1-ecdf(col_data$housing/12)(1200),4)*100`% of students reported paying over $1200.00/month.
+
+```{r}
+library(geomtextpath)
+
+
+# subtitle <- paste0('The avearge student spends $', round(mean(col_data$housing_total_cost/12),2),
+#                    ' a month on housing expenses. However, several students pay much more. ',
+#                    round(1-ecdf(col_data$housing_total_cost/12)(1200),4)*100, 
+#                    '% of students reported paying over $1200/mo')
+
+
+ggplot(col_data)+
+  geom_density(aes(x = housing_total_cost / 12),
+               fill = usc_cols(1)) +
+  labs(x = 'Monthly Housing Expenses', y= '',
+       title = 'Average Monthly Housing Cost') +
+  scale_y_continuous(expand = c(0,0),
+                     labels = function(x) paste0(100*x, '%'))+
+  theme_pubr()
+
+
+# print(subtitle)
+```
+
+
+## What is the housing cost based on living situation?
+
+Grad students live in several contexts and this can affect the total cost of housing.
+
+```{r}
+library(treemapify)
+
+col_data$living_situation[which(col_data$living_situation == '')] <- 'Other'
+col_data$living_situation[grep('alone', col_data$living_situation)] <- 'Alone'
+col_data$living_situation[grep('parents', col_data$living_situation)] <- 'Parents'
+col_data$living_situation[grep('partner', col_data$living_situation)] <- 'Partner'
+col_data$living_situation[grep('roommates', col_data$living_situation)] <- 'Roommates'
+
+living_sit_sum <- col_data |> 
+  group_by(living_situation) |> 
+  summarize(mean_house = mean(housing_total_cost/12),
+            sd_house = sd(housing_total_cost/12),
+            count = n()) |> 
+  mutate(freq = count/sum(count))
+
+housing_cost_plot <- ggplot(living_sit_sum)+
+  geom_bar(aes(x = living_situation, y = mean_house, fill = living_situation),
+           stat = 'identity')+
+  geom_errorbar(aes(x = living_situation, ymin = mean_house,
+                    ymax = mean_house + sd_house, color = living_situation),
+                width = 0.25) +
+  labs(title = 'Housing Cost by Living Situation',
+       x = '', y = 'Monthly Housing Cost [$]')+
+  scale_y_continuous(expand = c(0,0))+
+  scale_fill_usc(palette = 'confident') +
+  scale_color_usc(palette = 'confident')+
+  guides(fill = 'none', color = 'none')+
+  theme_pubr()
+
+prop_plot <- ggplot(living_sit_sum,
+                    aes(area = freq, fill = living_situation,
+                        label = paste(living_situation, 
+                                      paste0(round(freq,4)*100,'%'),
+                                      sep = '\n')))+
+  geom_treemap()+
+  geom_treemap_text(color = 'white') +
+  scale_fill_usc(palette = 'confident') +
+  guides(fill = 'none')+
+  theme_void()
+
+ggarrange(housing_cost_plot, prop_plot, nrow = 2, heights = c(1,.5))
+```
+
+## What is the total cost of living distribution?
+
+The Average students spends \$`r round(mean(col_data$total_col),2)` annually. The majority of students (75% high density interval) spend between \$`r hdi(col_data$total_col, credMass = .75)[1]`/year and \$`r hdi(col_data$total_col, credMass = .75)[2]`.
+
+Notably, this is lover than the living wage for a single individual in Columbia, SC
+
+
+```{r}
+
+ggplot(col_data)+
+  geom_density(aes(x = total_col),
+               fill = usc_cols(1)) +
+  labs(x = 'USD [$]', y= '',
+       title = 'Annual Expenses') +
+  scale_y_continuous(expand = c(0,0),
+                     labels = function(x) paste0(100*x, '%'))+
+  theme_pubr()
+
+
+```
+
+
+### How many people are reliant on external support?
+
+Many students rely on external support from friends/family or will take out loans to help cover their expenses.
+Overall, `r round(prop.table(table(col_data$take_loans))[['Yes']],4) * 100`% of respondents indicated that they took out loans. `r round(prop.table(table(col_data$recieve_fin_support)),4)[['Yes']] * 100`% of respondents stated they rely on friends or family for financial support. Those who receive financial support are less likely to take out aid.
+
+```{r}
+library(scales)
+
+col_data <- col_data[col_data$recieve_fin_support != '',]
+col_data <- col_data[col_data$take_loans != '',]
+
+ggplot(col_data) +
+  geom_bar(aes(x = recieve_fin_support, y = after_stat(count)/sum(after_stat(count)),
+               fill = take_loans),
+           position = 'stack')+
+  labs(x = 'Dependent on family/friends financial support?',
+       y = 'Percent', fill = 'Took out loans?')+
+  scale_fill_usc(palette = 'confident')+
+  scale_y_continuous(expand = c(0,0))+
+  theme_pubr()+
+  theme(legend.position = 'right')
+
+
+```
+
+So when we adjust the cost of living based on whether or not people are receiving financial support, we can see some different trends. 
+
+For those who do not receive financial support from others, the average annual cost of living is `r round(mean(col_data$total_col[col_data$recieve_fin_support == 'No']),2)`. 
+
+```{r}
+ggplot(col_data)+
+  geom_density(aes(x = total_col),
+               fill = usc_cols(1)) +
+  facet_wrap(~recieve_fin_support) +
+  labs(x = 'USD [$]', y= '',
+       subtitle = 'Separated by if students receive financial support',
+       title = 'Annual Expenses') +
+  scale_y_continuous(expand = c(0,0),
+                     labels = function(x) paste0(100*x, '%'))+
+  theme_pubr()
+```
+ 
+
+### How likely are people to take out loans based on stipend?
+
+```{r}
+stipends_clean <- read.table('../data/01_clean-stipends.tsv', sep = '\t')
+
+col_stipends <- stipends_clean |> 
+  select(RespondentId, stipend_amt) |> 
+  right_join(col_data, by = 'RespondentId')
+
+
+col_stipends$take_loans <- col_stipends$take_loans |> 
+  sapply(function(x) switch(x, 'Yes' = 1, 'No' = 0))
+
+loan_mod <- glm(take_loans ~ stipend_amt, family = 'binomial',
+                data = col_stipends)
+
+predicted_prob <- data.frame(
+  stipend_amt = seq(0,35000,1000),
+  probs = predict(loan_mod, 
+                   newdata = data.frame(stipend_amt = seq(0,35000,1000)), 
+                   type = 'response')
+)
+
+ggplot() +
+  geom_point(aes(x = stipend_amt,
+                 y = take_loans),
+             data = col_stipends) +
+  stat_smooth(data = predicted_prob,
+             aes(x = stipend_amt,
+                  y = probs),
+             col = 'black', size = 1, method = 'gam')+
+  labs(y = 'Probability of Taking Loan',
+       x = 'Stipend [$]',
+       title = 'How does stipend affect likelihood of taking out a loan?')+
+  theme_pubr()
+
+```
+

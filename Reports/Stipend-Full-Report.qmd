@@ -1,0 +1,436 @@
+---
+title: GSA Stipend & Cost-of-Living Report
+subtitle: Full Stipend Report
+author: Alex Barth, Secretary of Data Management
+date: '`r Sys.Date()`'
+output:
+  pdf
+code:
+  echo: FALSE
+---
+
+# General Information
+
+Stipend data were self reported in the GSA survey. Full data processing information are available in the Data Processing Report. It should be noted that because these values are self-reported the data are not without question. Several reponses
+
+# USC Reported Stipends
+
+Distribution of reported stipends in the survey
+
+```{r}
+rm(list = ls())
+library(ggusc)
+library(ggpubr)
+library(dplyr)
+library(ggplot2)
+stipends_clean <- read.table('../data/01_clean-stipends.tsv', sep = '\t')
+
+ggplot(stipends_clean)+
+  geom_density(aes(x=stipend_amt),
+               fill = usc_cols(1))+
+  labs(x = 'Reported Annual Guaranteed Funding [$]', y= '') +
+  scale_y_continuous(expand = c(0,0),
+                     labels = function(x) paste0(100*x, '%'))+
+  theme_pubr()
+  
+
+summary(stipends_clean$stipend_amt)
+```
+
+Distribution of average reported stipend
+
+```{r}
+
+stipends_clean |> 
+  group_by(Program) |> 
+  summarise(mean = mean(stipend_amt)) |> 
+  ggplot()+
+    geom_density(aes(x=mean),
+                 fill = usc_cols(1))+
+    labs(x = 'Program Annual Guaranteed Funding [$]', y= '') +
+    scale_y_continuous(expand = c(0,0),
+                       labels = function(x) paste0(100*x, '%'))+
+    scale_x_continuous(expand = c(0,0))+
+    theme_pubr()
+
+
+library(knitr)
+options(knitr.kable.NA = '')
+stipends_clean |> 
+  group_by(Program, College) |> 
+  summarise(`Mean Stipend` = mean(stipend_amt),
+            `Standard Dev` = sd(stipend_amt)) |> 
+  kable(replace_na = "")
+
+```
+
+
+
+## Stipends by College
+
+```{r, fig.height=6}
+
+
+
+stipends_by_college <- stipends_clean |> 
+  group_by(Program, College) |> 
+  summarize(mean_by_prog = mean(stipend_amt)) |> 
+  group_by(College) |> 
+  summarize(mean = mean(mean_by_prog),
+            sd = sd(mean_by_prog))
+    
+    
+stipends_by_college$College <- factor(stipends_by_college$College,
+                                      levels = stipends_by_college$College[order(stipends_by_college$mean,
+                                                                                 decreasing = T)])
+
+stipends_by_college |> 
+  kable()
+
+ggplot(stipends_by_college)+
+  geom_bar(aes(y = mean,
+               x = College,
+               fill = College),
+           stat = 'identity') +
+  geom_errorbar(aes(ymax = mean + sd,
+                    ymin = mean,
+                    x = College,
+                    color = College),
+                width = 0.5)+
+  scale_fill_usc(palette = 'confident')+
+  scale_color_usc(palette = 'confident')+
+  labs(y = 'Average Program Stipend by College',
+       x = '',
+       fill = "") +
+  guides(color = FALSE, fill = FALSE)+
+  scale_y_continuous(expand = c(0,0))+
+  theme_pubr()+
+  theme(axis.text.x = element_text(angle=45, hjust = c(1,1)))
+
+
+```
+
+
+## Stipends by Program Type
+
+```{r}
+
+
+
+stipends_by_type <- stipends_clean |> 
+  group_by(Program, program_type) |> 
+  summarize(mean_by_prog = mean(stipend_amt)) |> 
+  group_by(program_type) |> 
+  summarize(mean = mean(mean_by_prog),
+            sd = sd(mean_by_prog))
+    
+    
+stipends_by_type$program_type <- factor(stipends_by_type$program_type,
+                                      levels = stipends_by_type$program_type[order(stipends_by_type$mean,
+                                                                                 decreasing = T)])
+
+stipends_by_type |> 
+  kable()
+
+ggplot(stipends_by_type)+
+  geom_bar(aes(y = mean,
+               x = program_type,
+               fill = program_type),
+           stat = 'identity') +
+  geom_errorbar(aes(ymax = mean + sd,
+                    ymin = mean,
+                    x = program_type,
+                    color = program_type),
+                width = 0.5)+
+  scale_fill_usc(palette = 'confident')+
+  scale_color_usc(palette = 'confident')+
+  labs(y = 'Average Stipend by Program Type',
+       x = '',
+       fill = "") +
+  guides(color = FALSE, fill = FALSE)+
+  scale_y_continuous(expand = c(0,0))+
+  theme_pubr()+
+  theme(axis.text.x = element_text(angle=45, hjust = c(1,1)))
+
+
+
+```
+
+
+## What percentage of students are recieving additional funding?
+
+```{r}
+ggplot(stipends_clean)+
+  geom_bar(aes(x = addtl_funding,
+               fill = addtl_funding),
+           stat = 'count')+
+  guides(fill = FALSE)+
+  scale_fill_usc(palette = 'confident')+
+  labs(y='Num. of Respondents', x= "")+
+  scale_y_continuous(expand = c(0,0))+
+  theme_pubr()
+```
+### How much additional funding?
+
+```{r}
+ggplot(stipends_clean)+
+    geom_density(aes(x=addtl_amt),
+                 fill = usc_cols(1))+
+    labs(x = 'Additional Funding [$]', y= '') +
+    scale_y_continuous(expand = c(0,0),
+                       labels = function(x) paste0(100*x, '%'))+
+    scale_x_continuous(expand = c(0,0))+
+    theme_pubr()
+
+```
+
+
+
+# Market Analysis 
+
+## National-Program Comparison
+
+```{r}
+
+phdstipends <- read.table('../data/02_webphdstipends-cleaned.tsv',
+                          sep = '\t', header = T, na.strings = '<NA>')
+
+phdstipends$year_start <- phdstipends$year |> 
+  strsplit('-') |> 
+  sapply(`[[`,1)
+
+phd_current <- phdstipends[phdstipends$year_start >= 2020,]
+
+phd_summed <- phd_current |> 
+  group_by(Program, College, Uni, stipend, living, poverty) |> 
+  summarize(mean = mean(stipend))
+
+
+stipends_by_program <- stipends_clean |> 
+  group_by(Program, College, program_type) |> 
+  summarize(mean = mean(stipend_amt))
+
+ggplot() +
+  geom_point(data = phd_summed,
+             aes(x = living, y = stipend),
+             color = 'grey', alpha = .5)+
+  geom_point(data = stipends_by_program,
+             aes(x = 35609.6, y = mean),
+             color = usc_cols(1))+
+  stat_smooth(data = phd_summed,
+              aes(x = living, y = stipend),
+              color = 'black',
+              method = 'lm', se = F)+
+  stat_smooth(data = phd_current,
+            aes(y = living, x = living),
+            method = 'lm', se = F,
+            fullrange = T, color = 'green') +
+  stat_smooth(data = phd_current,
+              aes(x = living, y = poverty),
+              method = 'lm', se = F, color = 'red',
+              fullrange = T) +
+  theme_pubr()
+
+
+```
+
+
+
+## Competitor Specific Comparison
+
+```{r}
+
+comparison_unis <- c('Virginia Tech','University of Florida','University of Missouri','University of South Florida',
+                     'University of Alabama','University of North Carolina--Chapel Hill','Vanderbilt University',
+                     'Duke University','University of Virginia','Emory University','Florida State University',
+                     'University of Georgia','Wake Forest University','University of Kentucky','Auburn University')
+
+comparison_stipends <- phd_current[phd_current$Uni %in% comparison_unis,]
+
+comparison_summed <- comparison_stipends |> 
+  group_by(Program, Uni, stipend, living, poverty) |> 
+  summarize(mean = mean(stipend))
+
+ggplot() +
+  geom_point(data = comparison_summed,
+             aes(x = living, y = stipend),
+             color = 'grey', alpha = .5)+
+  geom_point(data = stipends_by_program,
+             aes(x = 35609.6, y = mean),
+             color = usc_cols(1))+
+  stat_smooth(data = comparison_summed,
+              aes(x = living, y = stipend),
+              color = 'black',
+              method = 'lm', se = F)+
+  stat_smooth(data = comparison_summed,
+            aes(y = living, x = living),
+            method = 'lm', se = F,
+            fullrange = T, col = 'green') +
+  stat_smooth(data = comparison_summed,
+              aes(x = living, y = poverty),
+              method = 'lm', se = F, color = 'red',
+              fullrange = T) +
+  theme_pubr() +
+  labs(x = 'Living Wage [$]', y = 'Graduate Annual Stipend [$]')
+
+
+
+
+```
+
+
+## Comparison by College
+
+```{r}
+
+college_comparer_plot <- function(college) {
+  
+  
+  plot = ggplot() +
+    geom_point(data = phd_summed[phd_summed$College == college,],
+               aes(x = living, y = stipend),
+               color = 'grey', alpha = .5)+
+    geom_point(data = stipends_by_program[stipends_by_program$College == college,],
+               aes(x = 35609.6, y = mean),
+               color = usc_cols(1))+
+    stat_smooth(data = phd_summed[phd_summed$College == college,],
+                aes(x = living, y = stipend),
+                color = 'black',
+                method = 'lm', se = F)+
+    stat_smooth(data = phd_current,
+              aes(y = living, x = living),
+              method = 'lm', se = F,
+              fullrange = T, color = 'green') +
+    stat_smooth(data = phd_current,
+                aes(x = living, y = poverty),
+                method = 'lm', se = F, color = 'red',
+                fullrange = T) +
+    theme_pubr()+
+    labs(x = 'Living Wage [$]', y = 'Graduate Annual Stipend [$]',
+         subtitle = college)
+
+
+    
+  return(plot)
+}
+
+
+for(college in unique(stipends_by_program$College)) {
+  print(college_comparer_plot(college))
+}
+
+
+```
+
+
+## Comparison by Program Type
+
+
+```{r}
+# to compare program type, we need to match for only matching programs
+
+
+matching_phds <- phd_current[phd_current$Program %in% stipends_by_program$Program,]
+matching_phds <- stipends_by_program |> 
+  select(Program, program_type) |> 
+  right_join(matching_phds, by = c("Program", "College"))
+
+program_type_plotter <- function(program_type) {
+  
+  
+  plot = ggplot() +
+    geom_point(data = matching_phds[matching_phds$program_type == program_type,],
+               aes(x = living, y = stipend),
+               color = 'grey', alpha = .5)+
+    geom_point(data = stipends_by_program[stipends_by_program$program_type == program_type,],
+               aes(x = 35609.6, y = mean),
+               color = usc_cols(1))+
+    stat_smooth(data = matching_phds[matching_phds$program_type == program_type,],
+                aes(x = living, y = stipend),
+                color = 'black',
+                method = 'lm', se = F)+
+    stat_smooth(data = phd_current,
+              aes(y = living, x = living),
+              method = 'lm', se = F,
+              fullrange = T, color = 'green') +
+    stat_smooth(data = phd_current,
+                aes(x = living, y = poverty),
+                method = 'lm', se = F, color = 'red',
+                fullrange = T) +
+    theme_pubr()+
+    labs(x = 'Living Wage [$]', y = 'Graduate Annual Stipend [$]',
+         subtitle = program_type)
+
+
+    
+  return(plot)
+}
+
+
+for(program_type in unique(stipends_by_program$program_type)) {
+  program_type_plotter(program_type) |> 
+    print()
+}
+
+```
+
+
+## How do stipends vary by university ranking?
+
+
+```{r}
+
+ggplot() +
+  geom_point(data = matching_phds,
+             aes(x = as.numeric(rank), 
+                 y = stipend/living),
+             color = 'grey', alpha = 0.5) +
+  geom_point(data = stipends_by_program,
+             aes(x = 115,
+                 y = mean / 35609.6),
+             col = usc_cols(1)) +
+  labs(x = 'US News Ranking', y = 'Stipend / Living Wage',
+       title = 'University Rankings by Graduate Pay Ratio')+
+  theme_pubr()
+
+
+```
+
+
+## Graduate Pay Ratio by College and Program Type
+
+```{r}
+
+rank_compare_plotter <- function(comparison, group) {
+  
+  usc_plots <- stipends_by_program[stipends_by_program[[comparison]] == group,]
+  matching_plots <- matching_phds[matching_phds[[comparison]] == group, ]
+  
+  ret_plot <- ggplot() +
+  geom_point(data = matching_plots,
+             aes(x = as.numeric(rank), 
+                 y = stipend/living),
+             color = 'grey', alpha = 0.5) +
+  geom_point(data = usc_plots,
+             aes(x = 115,
+                 y = mean / 35609.6),
+             col = usc_cols(1)) +
+  labs(x = 'US News Ranking', y = 'Stipend / Living Wage',
+       title = group)+
+  theme_pubr()
+
+  
+  return(ret_plot)
+}
+
+for(college in unique(stipends_by_program$College)) {
+  print(rank_compare_plotter('College',college))
+}
+
+for(program_type in unique(stipends_by_program$program_type)) {
+  print(rank_compare_plotter('program_type', program_type))
+}
+
+
+```
+

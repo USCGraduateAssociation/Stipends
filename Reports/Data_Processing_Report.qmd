@@ -1,9 +1,18 @@
 ---
-title: GSA Stipend Analysis
+title: GSA Stipend & Cost-of-Living Analysis
 subtitle: Data Processing Report
 author: Alex Barth, Secretary of Data Management
-date: `r Sys.Date()`
+date: "`r Sys.Date()`"
 ---
+
+# Stipend and Cost of Living Survey Results
+
+Data was collected from a GSA- administered survey which concluded in January 2023.
+Students volunteered to respond with their reported stipends and living costs.
+
+Students who responded numbers that were not clear were removed. For example, when asked what their department provided stipend was, a respondent stated "990", this value was removed as it was not clear if that is by month, paycheck, etc. If a respondent clearly stated their monthly or paycheck amount, it was multiplied out to equate to 9 or 12 months. Notably, this then reports post-tax salary which is lower than ideal for comparison. However, it should be noted that this was a minority of cases.
+Additionally, it appeared that some students reported what they were receiving over a multi-year period. These cases typically were reported in the comments and removed. However, some students reported amounts much higher than their peers in the same program. It is possible that these people had external funding but did not answer correctly on their form. Because our interest was how much departments are paying graduate workers, these results were filtered out. This removed 6 individual responses.
+
 
 ## Selection of Comparison Universities
 To facilitate a list of comparison universities, we looked at National Universities in large metro areas. These were selected by taking the top 400 ranked national universities (per U.S. News Rankings)
