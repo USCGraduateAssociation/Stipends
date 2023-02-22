@@ -15,13 +15,13 @@ message: FALSE
 
 # Executive Summary
 
-Graduate student pay is a priorty issue for both the Graduate Student Association and the Unversity as a whole. In the 2022 Graduate Student Needs Assessment, stipends and finacial support was identified as the primary concern for graduate students. To evaluate the current condition of graduate student pay and the cost of living in Columbia, GSA sent a survey to all graduate students asking for them to volunarity report their stipends and the cost of their basic needs (housing, food, transportation). With this information, GSA investigated how graduate student pay supports their basic needs and how pay compares to other national universities.
+Graduate student pay is a priory issue for both the Graduate Student Association and the University as a whole. In the 2022 Graduate Student Needs Assessment, stipends and financial support was identified as the primary concern for graduate students. To evaluate the current condition of graduate student pay and the cost of living in Columbia, GSA sent a survey to all graduate students asking for them to voluntarily report their stipends and the cost of their basic needs (housing, food, transportation). With this information, GSA investigated how graduate student pay supports their basic needs and how pay compares to other national universities.
 
-From an administrative and universtiy perspective, low graduate student pay decreases the competitiviness of USC's graduate programs. Graduate students are a critical function of the unversity. They provide work as teachers, researchers, and mentors throughout the university. To recruit top candidates to work as graduate students, USC needs to pay graduate students a rate competitive with the pay from other national universities. By comparing reported stipends by program to a national repository of graduate student pay rates, it was found that USC systematically pays less than other universities. Across all academic disciplines, USC pays \$8,926.64 less than the market average, having adjusted for the cost of living in different metro areas. While there is large variation in graduate pay based on program type, below-market pay was a consistent finding for the vast majority of programs.
+From an administrative and university perspective, low graduate student pay decreases the competitiveness of USC's graduate programs. Graduate students are a critical function of the university. They provide work as teachers, researchers, and mentors throughout the university. To recruit top candidates to work as graduate students, USC needs to pay graduate students a rate competitive with the pay from other national universities. By comparing reported stipends by program to a national repository of graduate student pay rates, it was found that USC systematically pays less than other universities. Across all academic disciplines, USC pays \$8,926.64 less than the market average, having adjusted for the cost of living in different metro areas. While there is large variation in graduate pay based on program type, below-market pay was a consistent finding for the vast majority of programs.
 
-From a graduate student perspective, low stipend amounts have become a concern with the increased cost of living over recent years. It was found that all programs are paying below the living wage for a single individual in the Columbia Metro Area. When evaluating just the cost of basic necessities, graduate pay tends to be inadequate. The average graduate student stipend is \$15,047.22/year. However, the average cost of basic necessities was \$21,514.84/year. Many students then seek alternative methods to supplement their income, often through loans. 43.1% of Master's students reporteded taking out loans while 21.1% of Doctoral students reported taking loans. There was a clear relationship between graduate student pay and the likelihood of taking out loans. While graduate students are pursuing advanced degrees in hopes of increasing career qualifications, often they also function as university employees. Graduate student pay should at a minimum facilitate students to meet their basic necessities without incurring debt.
+From a graduate student perspective, low stipend amounts have become a concern with the increased cost of living over recent years. It was found that all programs are paying below the living wage for a single individual in the Columbia Metro Area. When evaluating just the cost of basic necessities, graduate pay tends to be inadequate. The average graduate student stipend is \$15,047.22/year. However, the average cost of basic necessities was \$21,514.84/year. Many students then seek alternative methods to supplement their income, often through loans. 43.1% of Master's students reported taking out loans while 21.1% of Doctoral students reported taking loans. There was a clear relationship between graduate student pay and the likelihood of taking out loans. While graduate students are pursuing advanced degrees in hopes of increasing career qualifications, often they also function as university employees. Graduate student pay should at a minimum facilitate students to meet their basic necessities without incurring debt.
 
-To both remain competitive and properly support graduate student pay, USC needs to evaluate how to increase graduate student pay across all programs. Graduate student pay across the nation has become a major discussion in higher education. GSA's analysis suggests that USC is falling critically behind in this issue. Recently, several universities have made plans to increase their graduate student pay. While graduate student pay is a complex issue due to the decisions made at several different levels (universtiy, college, deptartment), it is clear that low pay is an urgent issue for USC administration.
+To both remain competitive and properly support graduate student pay, USC needs to evaluate how to increase graduate student pay across all programs. Graduate student pay across the nation has become a major discussion in higher education. GSA's analysis suggests that USC is falling critically behind in this issue. Recently, several universities have made plans to increase their graduate student pay. While graduate student pay is a complex issue due to the decisions made at several different levels (university, college, department), it is clear that low pay is an urgent issue for USC administration.
 
 
 # Market Analysis
@@ -48,6 +48,7 @@ library(ggusc)
 library(ggpubr)
 library(dplyr)
 library(ggplot2)
+library(plotly)
 stipends_clean <- read.table('../data/01_clean-stipends.tsv', sep = '\t')
 
 
@@ -66,15 +67,18 @@ phd_summed <- phd_current |>
 
 
 stipends_by_program <- stipends_clean |> 
-  group_by(Program, College, program_type) |> 
+  group_by(Program, College, program_type, student_type) |> 
   summarize(mean = mean(stipend_amt))
 
-ggplot() +
+comp_plot <- ggplot() +
   geom_point(data = phd_summed,
-             aes(x = living, y = stipend),
+             aes(x = living, y = stipend,
+                 Uni = Uni, Program = Program),
              color = 'grey', alpha = .5)+
   geom_point(data = stipends_by_program,
-             aes(x = 35609.6, y = mean),
+             aes(x = 35609.6, y = mean,
+                 Program = Program, stipend = round(mean,2), 
+                 degree = student_type),
              color = usc_cols(1))+
   stat_smooth(data = phd_summed,
               aes(x = living, y = stipend),
@@ -92,6 +96,8 @@ ggplot() +
        title = 'Graduate Student Pay Market Analysis',
        subtitle = 'USC falls below the market average for most programs')+
   theme_pubr()
+
+ggplotly(comp_plot, tooltip = c('stipend','Uni','Program', 'degree'))
 ```
 
 Low stipend pay is consistent across colleges and program types. Engineering programs are \$8,702.78 below market average, Social Science \$6,904.7 below; Humanities \$10,036.84 below; and Natural Sciences \$7,569.77 below.
@@ -108,31 +114,34 @@ matching_phds <- stipends_by_program |>
   right_join(matching_phds, by = c("Program", "College"))
 
 
-ggplot() +
+rank_plot <- ggplot() +
   geom_point(data = matching_phds,
              aes(x = as.numeric(rank), 
-                 y = stipend/living),
+                 y = stipend/living,
+                 Program = Program,
+                 Uni = Uni),
              color = 'grey', alpha = 0.5) +
   geom_point(data = stipends_by_program,
              aes(x = 115,
-                 y = mean / 35609.6),
+                 y = mean / 35609.6,
+                 Program = Program),
              col = usc_cols(1)) +
   labs(x = 'US News Ranking', y = 'Stipend / Living Wage',
        title = 'Graduate Pay Across University Rankings',
        subtitle = 'USC (115) pays lower than the trend')+
   theme_pubr()
 
-
+ggplotly(rank_plot, tooltip = c('y',"Program","Uni"))
 ```
 
-Graduate students play an important role in the university system. While US News Rankings are not a perfect indicator of a university's overall performance, they provide a clear indicator for overall university prestige. It is clear that higher-ranked universities pay a higher graduate student pay. USC, currently is ranked at 115. For this ranking, the distribution of graduate pay is shifted lower than would be expected. 
+Graduate students play an important role in the university system. While US News Rankings are not a perfect indicator of a university's overall performance, they provide a clear indicator for overall university prestige. It is clear that higher-ranked universities pay a higher graduate student pay. USC is currently ranked at 115. For this ranking, the distribution of graduate pay is shifted lower than would be expected. 
 
 
 # Basic Needs Summary
 
 ## Data & Methods
 
-In the 2023 GSA stipend and cost of living survey, students were prompted to report the cost of their basic necessities. Respondents were able to select a range of values. When summarizing data, the mid-point of the ranges were used to calculate. In cases where respondents were able to report a category with no upper bound, the width of typical responses was added to the maximum value (for example, rent costs were reported in \$200 bins with an option for 'Greater than \$1300', those values were quantified as \$1400). Thus, the cost of basic necessities may be underestimated for some individuals.
+In the 2023 GSA stipend and cost of living survey, students were prompted to report the cost of their basic necessities. Respondents were able to select a range of values. When summarizing data, the mid-point of the ranges were used to calculate totals. In cases where respondents were able to report a category with no upper bound, the width of typical responses was added to the maximum value (for example, rent costs were reported in \$200 bins with an option for 'Greater than \$1300', those values were quantified as \$1400). Thus, the cost of basic necessities may be underestimated for some individuals.
 
 ```{r}
 
