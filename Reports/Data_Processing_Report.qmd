@@ -1,6 +1,6 @@
 ---
 title: GSA Stipend & Cost-of-Living Analysis
-subtitle: Data Processing Report
+subtitle: Appendix C. Data Processing Report
 author: Alex Barth, Secretary of Data Management
 date: "`r Sys.Date()`"
 ---

@@ -1,10 +1,14 @@
 ---
 title: GSA Stipend & Cost-of-Living Analysis
-subtitle: Cost of Living and DEI Report
+subtitle: Appendix B. Cost of Living Analysis
 author: Alex Barth, Secretary of Data Management
 date: "`r Sys.Date()`"
 format:
   pdf
+execute:
+  echo: FALSE
+  warning: FALSE
+  message: FALSE
 ---
 
 ```{r}
@@ -25,7 +29,9 @@ col_data <- read.table('../data/01_cost-of-living.tsv', sep= '\t')
 
 ### Distribution of Common Costs
 
-Rent, Utilities, Food, Transportation, Health out-of-pocket, household goods
+To understand the cost of basic necessities of graduate students, the GSA cost of living survey asked respondents to indicate their basic expenditures in pre-assigned ranges. To quantify responses, values were recorded as the midpoint of the assigned range. Basic necessities include: Rent, Utilities, Food, Transportation, Health out-of-pocket, household goods. In total, 775 respondents were used in this analysis.
+
+The average total cost of basic necessities was \$21,514.84. The high-density 50% interval was \$9,600 and \$34,800. It should be noted that the cost of basic necessities is below what is considered a living wage by the MIT living wage calculator.
 
 ```{r}
 
@@ -80,7 +86,7 @@ col_data$total_col <- apply(col_data[,grep('_num', names(col_data))],1,sum) * 12
 
 The Average students spends \$`r round(mean(col_data$housing_total_cost/12),2)`/month on housing costs. However, several students report spending much more. `r round(1-ecdf(col_data$housing/12)(1200),4)*100`% of students reported paying over $1200.00/month.
 
-```{r}
+```{r, fig.cap='Distribution of housing expenditures by graduate students.'}
 library(geomtextpath)
 
 
@@ -93,8 +99,7 @@ library(geomtextpath)
 ggplot(col_data)+
   geom_density(aes(x = housing_total_cost / 12),
                fill = usc_cols(1)) +
-  labs(x = 'Monthly Housing Expenses', y= '',
-       title = 'Average Monthly Housing Cost') +
+  labs(x = 'Monthly Housing Expenses', y= '') +
   scale_y_continuous(expand = c(0,0),
                      labels = function(x) paste0(100*x, '%'))+
   theme_pubr()
@@ -108,7 +113,7 @@ ggplot(col_data)+
 
 Grad students live in several contexts and this can affect the total cost of housing.
 
-```{r}
+```{r, fig.cap='Cost of housing based on living situation and the proportion of graduate students in each living situation.'}
 library(treemapify)
 
 col_data$living_situation[which(col_data$living_situation == '')] <- 'Other'
@@ -130,8 +135,7 @@ housing_cost_plot <- ggplot(living_sit_sum)+
   geom_errorbar(aes(x = living_situation, ymin = mean_house,
                     ymax = mean_house + sd_house, color = living_situation),
                 width = 0.25) +
-  labs(title = 'Housing Cost by Living Situation',
-       x = '', y = 'Monthly Housing Cost [$]')+
+  labs(x = '', y = 'Monthly Housing Cost [$]')+
   scale_y_continuous(expand = c(0,0))+
   scale_fill_usc(palette = 'confident') +
   scale_color_usc(palette = 'confident')+
@@ -154,12 +158,9 @@ ggarrange(housing_cost_plot, prop_plot, nrow = 2, heights = c(1,.5))
 
 ## What is the total cost of living distribution?
 
-The Average students spends \$`r round(mean(col_data$total_col),2)` annually. The majority of students (75% high density interval) spend between \$`r hdi(col_data$total_col, credMass = .75)[1]`/year and \$`r hdi(col_data$total_col, credMass = .75)[2]`.
-
-Notably, this is lover than the living wage for a single individual in Columbia, SC
 
 
-```{r}
+```{r, fig.cap='Distribution of total cost of basic necessities.'}
 
 ggplot(col_data)+
   geom_density(aes(x = total_col),
@@ -179,7 +180,7 @@ ggplot(col_data)+
 Many students rely on external support from friends/family or will take out loans to help cover their expenses.
 Overall, `r round(prop.table(table(col_data$take_loans))[['Yes']],4) * 100`% of respondents indicated that they took out loans. `r round(prop.table(table(col_data$recieve_fin_support)),4)[['Yes']] * 100`% of respondents stated they rely on friends or family for financial support. Those who receive financial support are less likely to take out aid.
 
-```{r}
+```{r, fig.cap = 'Proportion of students reliant on external support and loans.'}
 library(scales)
 
 col_data <- col_data[col_data$recieve_fin_support != '',]
@@ -199,7 +200,6 @@ ggplot(col_data) +
 
 ```
 
-So when we adjust the cost of living based on whether or not people are receiving financial support, we can see some different trends. 
 
 For those who do not receive financial support from others, the average annual cost of living is `r round(mean(col_data$total_col[col_data$recieve_fin_support == 'No']),2)`. 
 
@@ -223,12 +223,13 @@ ggplot(col_data)+
 stipends_clean <- read.table('../data/01_clean-stipends.tsv', sep = '\t')
 
 col_stipends <- stipends_clean |> 
-  select(RespondentId, stipend_amt) |> 
-  right_join(col_data, by = 'RespondentId')
+  select(RespondentId, stipend_amt, student_type, Program, program_type, College) |> 
+  left_join(col_data, by = 'RespondentId')
 
 
 col_stipends$take_loans <- col_stipends$take_loans |> 
-  sapply(function(x) switch(x, 'Yes' = 1, 'No' = 0))
+  sapply(function(x) switch(x, 'Yes' = 1, 'No' = 0, NA)) |> 
+  unlist()
 
 loan_mod <- glm(take_loans ~ stipend_amt, family = 'binomial',
                 data = col_stipends)
@@ -252,6 +253,32 @@ ggplot() +
        x = 'Stipend [$]',
        title = 'How does stipend affect likelihood of taking out a loan?')+
   theme_pubr()
+
+```
+
+
+### How likely are people to take a loan based on degree type?
+
+```{r}
+
+```
+
+
+Professional students are far more likely to take out loans and were excluded from this analysis. It was found that 43.1% of Master's students took loans while 21.1% of Doctoral students took loans.
+
+```{r}
+ggplot(col_stipends[!is.na(col_stipends$take_loans),]) +
+  geom_bar(aes(x = student_type, y = after_stat(count)/sum(after_stat(count)),
+               fill = ifelse(take_loans == 1, 'Yes','No')),
+           position = 'stack')+
+  labs(x = 'Student Type',
+       y = 'Percent', fill = 'Took out loans?')+
+  scale_fill_usc(palette = 'confident')+
+  scale_y_continuous(expand = c(0,0))+
+  theme_pubr()+
+  theme(legend.position = 'right')
+
+
 
 ```
 

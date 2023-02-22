@@ -1,23 +1,27 @@
 ---
 title: GSA Stipend & Cost-of-Living Report
-subtitle: Full Stipend Report
+subtitle: Appendix A. Full Stipend Report
 author: Alex Barth, Secretary of Data Management
 date: '`r Sys.Date()`'
-output:
+format:
   pdf
-code:
+execute:
   echo: FALSE
+  warning: FALSE
+  message: FALSE
 ---
 
 # General Information
 
-Stipend data were self reported in the GSA survey. Full data processing information are available in the Data Processing Report. It should be noted that because these values are self-reported the data are not without question. Several reponses
+Stipend data were self reported in the GSA survey. Full data processing information are available in the Data Processing Report. It should be noted that because these values are self-reported the data are not without question. Several responses did not provide usable information and were removed from this analysis. However, the purpose of this information is to understand the distribution of stipends provided by different programs and how they compare to other universities. Thus, we did not prioritize individual responses but rather getting information across multiple programs. In total, we received 324 usable responses from 63 different programs in 11 Colleges across the university.
 
 # USC Reported Stipends
 
-Distribution of reported stipends in the survey
+### Distribution of reported stipends in the survey
 
-```{r}
+Individual survey responses for the stipend value are shown below. It should be noted that stipends are not distinguished between 9-month and 12-month salaries.
+
+```{r, fig.cap='Distribution of annual guaranteed stipends for all survey respondants.'}
 rm(list = ls())
 library(ggusc)
 library(ggpubr)
@@ -34,12 +38,18 @@ ggplot(stipends_clean)+
   theme_pubr()
   
 
-summary(stipends_clean$stipend_amt)
+# summary(stipends_clean$stipend_amt)
 ```
 
-Distribution of average reported stipend
+<br>
+<br>
 
-```{r}
+### Distribution of average reported stipend
+
+To understand the average stipend given by departments/colleges at the university, individual responses within programs were averaged. The university wide average stipend was \$15,047.22. The 50% high density interval of programs paid between \$12,915.38 and \$20,000.00.
+
+The table below provides the average reported value for all stipends by department
+```{r, fig.cap='Average stipend by program.'}
 
 stipends_clean |> 
   group_by(Program) |> 
@@ -68,7 +78,7 @@ stipends_clean |>
 
 ## Stipends by College
 
-```{r, fig.height=6}
+```{r, fig.height=6, fig.cap='Average stipend by college.'}
 
 
 
@@ -113,8 +123,7 @@ ggplot(stipends_by_college)+
 
 ## Stipends by Program Type
 
-```{r}
-
+```{r, fig.cap='Average stipend by program type.'}
 
 
 stipends_by_type <- stipends_clean |> 
@@ -159,20 +168,22 @@ ggplot(stipends_by_type)+
 
 ## What percentage of students are recieving additional funding?
 
-```{r}
+Students were asked to disclose any additional funding they received outside their departmental contracts. While approximately 18.8% of respondents indicated that they were receiving additional funding, it was clear that some respondents reported smaller, one-time grants, which are not indicative of their overall financial situation.
+
+```{r, fig.cap='Proportion of students who responded they were receiving additional funding.'}
 ggplot(stipends_clean)+
-  geom_bar(aes(x = addtl_funding,
+  geom_bar(aes(x = addtl_funding, y = after_stat(count)/sum(after_stat(count)),
                fill = addtl_funding),
            stat = 'count')+
-  guides(fill = FALSE)+
+  guides(fill = 'none')+
   scale_fill_usc(palette = 'confident')+
-  labs(y='Num. of Respondents', x= "")+
+  labs(y='Proportion of Respondents', x= "")+
   scale_y_continuous(expand = c(0,0))+
   theme_pubr()
 ```
 ### How much additional funding?
 
-```{r}
+```{r, fig.cap='Distribution of additional funding amount.'}
 ggplot(stipends_clean)+
     geom_density(aes(x=addtl_amt),
                  fill = usc_cols(1))+
@@ -190,7 +201,11 @@ ggplot(stipends_clean)+
 
 ## National-Program Comparison
 
-```{r}
+To compare USC graduate student stipends to other universities, data were collected from a publicly available repository of phd stipends [(link)](https://www.phdstipends.com/). These data required similar processing to our stipend and details can be found in Appendix C. It should be noted that this comparison source does not encourage responses from professional students who are not working full time as graduate assistants but rather supplementing their income while completing a professional degree. While that discrepancy can explain some of the lower-end data point USC has, it is not a full explanation as there are a few programs which do pay below the poverty line. To get a better view of specific groups, look to the college/program type comparison charts or the data exploration widget.
+
+Cost of living variation between university locations was taken into account by using metro area's living wage for a single individual based on [MIT's Cost of Living Calculator](https://livingwage.mit.edu/). Poverty levels were also accessed from the same source. In all sub-group comparisons shown below, a black line also indicates a linear regression of competitor universities.
+
+```{r, fig.cap='Market Analysis of USC annual stipend compared to other national universities. Green line indicates MIT living wage for a single individual, red line indicates the poverty level, black line is the regression of competitor universities.'}
 
 phdstipends <- read.table('../data/02_webphdstipends-cleaned.tsv',
                           sep = '\t', header = T, na.strings = '<NA>')
@@ -229,6 +244,7 @@ ggplot() +
               aes(x = living, y = poverty),
               method = 'lm', se = F, color = 'red',
               fullrange = T) +
+  labs(x = 'Living Wage [$]', y = 'Graduate Annual Stipend [$]')+
   theme_pubr()
 
 
@@ -238,7 +254,9 @@ ggplot() +
 
 ## Competitor Specific Comparison
 
-```{r}
+Local and SEC comparison universities were also selected for direct comparison.
+
+```{r, fig.cap='Market Comparison for other SEC or nearby universities. Green line indicates MIT living wage for a single individual, red line indicates the poverty level, black line is the regression of competitor universities.'}
 
 comparison_unis <- c('Virginia Tech','University of Florida','University of Missouri','University of South Florida',
                      'University of Alabama','University of North Carolina--Chapel Hill','Vanderbilt University',
@@ -281,7 +299,7 @@ ggplot() +
 
 ## Comparison by College
 
-```{r}
+```{r, fig.cap='Market analysis comparisons for sub-groups separated by college. Comparison universities were assigned to the college that they would have been in, if at USC. Green line indicates MIT living wage for a single individual, red line indicates the poverty level, black line is the regression of competitor universities.'}
 
 college_comparer_plot <- function(college) {
   
@@ -326,7 +344,7 @@ for(college in unique(stipends_by_program$College)) {
 ## Comparison by Program Type
 
 
-```{r}
+```{r, fig.cap='Market analysis for comparison universities based on program type. Green line indicates MIT living wage for a single individual, red line indicates the poverty level, black line is the regression of competitor universities.'}
 # to compare program type, we need to match for only matching programs
 
 
@@ -377,8 +395,9 @@ for(program_type in unique(stipends_by_program$program_type)) {
 
 ## How do stipends vary by university ranking?
 
+To assess how graduate student pay correlates with university prestige, stipends were visualized by a University's US News Ranking. 
 
-```{r}
+```{r, fig.cap='Graduate stipend shown by US News Ranking. Garnet points indicate USC while grey indicates other universities'}
 
 ggplot() +
   geom_point(data = matching_phds,
@@ -389,8 +408,7 @@ ggplot() +
              aes(x = 115,
                  y = mean / 35609.6),
              col = usc_cols(1)) +
-  labs(x = 'US News Ranking', y = 'Stipend / Living Wage',
-       title = 'University Rankings by Graduate Pay Ratio')+
+  labs(x = 'US News Ranking', y = 'Stipend / Living Wage')+
   theme_pubr()
 
 
