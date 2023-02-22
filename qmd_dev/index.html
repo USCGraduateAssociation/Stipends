@@ -94,13 +94,14 @@ background: #73000a;
 <h2 class="anchored" data-anchor-id="data-sources-methods">Data Sources &amp; Methods</h2>
 <p>To assess how other universities graduate student pay compares to USC, graduate student pay information was collected from a public-survey recording graduate stipends <a href="https://www.phdstipends.com/results">(link)</a>. For comparison, stipend pay information was limited to reports which were more recent than the 2020-21 academic year. Data were not fully QAQC’d so several reports had to be discarded. Additionally, only reports from national universities (ranked by US News top 250) in major metropolitan areas were considered. Finally, programs were only considered if they matched a program offered by USC for direct comparison. In total, this yielded 1388 individual reports from 769 programs (54 unique) across 138 US universities.</p>
 <p>USC stipend data were collected from the 2023 GSA Stipend and Cost of Living Survey. After QAQC, 324 individual responses were available from 63 programs across all 11 Colleges/Schools in the University. Individual responses within a program were averaged to better estimate the standard stipend offered by a department.</p>
-<p>To account for differences in cost of living between university locations, stipends were standardized to the living wage for a single individual in the metro area. These data were cacluated from the MIT Living Wage Calculator. For visualization purposes, the poverty line was also accessed from this source. Additionally a simple linear regression for living wage predicting stipend was conducted using comparison universities to establish the “market average” stipend across regions. For reference the single-individual living wage in the Columbia metro area is $35,609.6/year <a href="https://livingwage.mit.edu/metros/17900">(MIT Calculator)</a>.</p>
+<p>To account for differences in cost of living between university locations, stipends were standardized to the living wage for a single individual in the metro area. These data were calculated from the MIT Living Wage Calculator. For visualization purposes, the poverty line was also accessed from this source. Additionally a simple linear regression for living wage predicting stipend was conducted using comparison universities to establish the “market average” stipend across regions. For reference the single-individual living wage in the Columbia metro area is $35,609.6/year <a href="https://livingwage.mit.edu/metros/17900">(MIT Calculator)</a>.</p>
 <p><a href="https://github.com/USCGraduateAssociation/Stipends">Appendix C</a></p>
 </section>
 <section id="core-findings" class="level2">
 <h2 class="anchored" data-anchor-id="core-findings">Core Findings</h2>
-<section id="usc-is-far-below-market" class="level3">
-<h3 class="anchored" data-anchor-id="usc-is-far-below-market">USC is far below market</h3>
+<section id="usc-is-consistently-below-market" class="level3">
+<h3 class="anchored" data-anchor-id="usc-is-consistently-below-market">1. USC is consistently below market</h3>
+<p>It was found that USC is systematically paying below the cost-of-living adjusted market average ($25,521.05). The average program stipend at USC is $15,865.83. It should be noted that our survey included a few professional students (~7.7% of respondents, 13.8% of programs) whose stipends are generally lower than that of academic graduate students. Additionally, professional students are not well represented in our comparison dataset. When removing professional students the average stipend is $16,594.41, still $8,926.64. While professional students can explain a few instances of extremely low wages seen in the above figure, they do not encompass all sub-poverty stipends. 30.4% of investigated programs have average stipends reported to be less than the poverty wage in Columbia, SC. There is very large variation between programs and program types. These data are explored further in Appendix A.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -111,11 +112,10 @@ background: #73000a;
 </div>
 </div>
 </div>
-<p>It was found that USC is systematically paying below the cost-of-living adjusted market average ($25,521.05). The average program stipend at USC is $15,865.83. It should be noted that our survey included a few professional students (~7.7% of respondents, 13.8% of programs) whose stipends are generally lower than that of academic graduate students. Additionally, professional students are not well represented in our comparison dataset. When removing professional students the average stipend is $16,594.41, still $8,926.64. While professional students can explain a few instances of extremely low wages seen in the above figure, they do not encompass all sub-poverty stipends. 30.4% of investigated programs have average stipends reported to be less than the poverty wage in Columbia, SC. There is very large variation between programs and program types. These data are explored further in Appendix A.</p>
-<p>Comparisons by program, college, or program type can be explored using the <a href="https://alexbarth.shinyapps.io/stipends_shiny/">stipend explorer widget</a>. Note that the link may have expired if accessed later. To get specific data, you can explore Appendix A, or directly contact the Secretary of Data Management, Alex Bart, at AB93@email.sc.edu.</p>
+<p>Low stipend pay is consistent across colleges and program types. Engineering programs are $8,702.78 below market average, Social Science $6,904.7 below; Humanities $10,036.84 below; and Natural Sciences $7,569.77 below. Comparisons by program, college, or program type can be explored using the <a href="https://alexbarth.shinyapps.io/stipends_shiny/">stipend explorer widget</a>. Note that the link may have expired if accessed later. To get specific data, you can explore Appendix A, or directly contact the Secretary of Data Management, Alex Bart, at AB93@email.sc.edu.</p>
 </section>
 <section id="higher-ranked-universities-tend-to-pay-graduate-students-higher." class="level3">
-<h3 class="anchored" data-anchor-id="higher-ranked-universities-tend-to-pay-graduate-students-higher.">Higher ranked universities tend to pay graduate students higher.</h3>
+<h3 class="anchored" data-anchor-id="higher-ranked-universities-tend-to-pay-graduate-students-higher.">2. Higher ranked universities tend to pay graduate students higher.</h3>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -132,12 +132,73 @@ background: #73000a;
 </section>
 <section id="basic-needs-summary" class="level1">
 <h1>Basic Needs Summary</h1>
-<p>, with 50% of respondents basic needs costing between $9,600 and $34,800.</p>
-<p>, with 50% of stipends paying between $12,915.38 and $20,000.00.</p>
+<section id="data-methods" class="level2">
+<h2 class="anchored" data-anchor-id="data-methods">Data &amp; Methods</h2>
+<p>In the 2023 GSA stipend and cost of living survey, students were prompted to report the cost of their basic necessities. Respondents were able to select a range of values. When summarizing data, the mid-point of the ranges were used to calculate. In cases where respondents were able to report a category with no upper bound, the width of typical responses was added to the maximum value (for example, rent costs were reported in $200 bins with an option for ‘Greater than $1300’, those values were quantified as $1400). Thus, the cost of basic necessities may be underestimated for some individuals.</p>
+<div class="cell">
+
+</div>
+<p>Basic necessities were recorded as: rent, utilities, food costs, transportation costs, out-of-pocket healthcare, and household goods.</p>
+</section>
+<section id="core-findings-1" class="level2">
+<h2 class="anchored" data-anchor-id="core-findings-1">Core Findings</h2>
+<section id="cost-of-basic-necessities-exceeds-the-average-stipend" class="level3">
+<h3 class="anchored" data-anchor-id="cost-of-basic-necessities-exceeds-the-average-stipend">1. Cost of basic necessities exceeds the average stipend</h3>
+<p>The annual average total cost of basic necessities was $21,514.84. With 50% of students reporting paying between $9,600 and $34,800. Meanwhile, the average reported stipend was ~$15,000, with 50% of respondents receiving between $12,915.38 and $20,000.00. It should be noted that the cost of basic necessities is below what is considered a living wage by the MIT living wage calculator.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">Distribution of total cost of basic necessities.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="housing-is-the-largest-expense" class="level3">
+<h3 class="anchored" data-anchor-id="housing-is-the-largest-expense">2. Housing is the largest expense</h3>
+<p>The majority of students are renters and the cost of rent continues to increase in Columbia. The majority of students live either alone or with a partner and their housing costs are much higher, at an average of $1,150/month and $1,119/month respectively. While approximately a third of students are able to reduce costs by living in shared-spaces, they still pay an average of $825/month. A very small fraction of students are able to live with family nearby. It should be noted that not all students are able to live with roommates due to personal or safety reasons. This suggests that low graduate pay may have a disproportionate impact on students who are already disadvantaged or marginalized.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">Cost of housing based on living situation and the proportion of graduate students in each living situation.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="students-are-taking-out-loans" class="level3">
+<h3 class="anchored" data-anchor-id="students-are-taking-out-loans">3. Students are taking out loans</h3>
+<p>Finally, because students are not able to meet their basic needs with their graduate student pay, many students are forced to take out loans. Professional students are far more likely to take out loans and were excluded from this analysis. It was found that 43.1% of Master’s students took loans while 21.1% of Doctoral students took loans. A small fraction of students indicated they receive financial support from family and friends. Other students reported that they have been forced into taking second jobs to help meet expenses.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">Proportion of students taking out loans based on program type. Professional-degree seeking students were excluded from this analysis.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
 </section>
 <section id="access-the-appendices" class="level1">
 <h1>Access the appendices</h1>
-<p><a href="./Appendix/AppendixA.pdf" download="2023_GSA-Stipend-Appendix">Appendix A: Stipend Data &amp; Market Analysis</a></p>
+<ul>
+<li>
+<a href="./Appendix/AppendixA.pdf" download="2023_GSA-Stipend-Appendix">Appendix A: Stipend Data &amp; Market Analysis</a>
+</li>
+<li>
+<a href="./Appendix/AppendixB.pdf" download="2023_GSA-Stipend-Appendix">Appendix B: Cost of Living Analysis</a>
+</li>
+<li>
+<a href="https://github.com/USCGraduateAssociation/Stipends">Appendix C: Data and Processing Repository</a>
+</li>
+</ul>
 </section>
 
 </main>
